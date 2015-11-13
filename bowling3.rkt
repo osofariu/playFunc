@@ -1,19 +1,24 @@
 #lang lazy
 
+(define (drop ct lst) (if (<= ct 0) lst (drop (- ct 1) (rest lst))))
+                
 (define (game rolls) 
   (define (is-spare? frame) (= 10 (+ (first frame) (second frame))))
   (define (is-strike? frame) (= 10 (first frame)))
+
+  (define (advance-rolls rolls)
+    (let ((advance-ct (if (or (is-strike? rolls) (is-spare? rolls)) 3 2)))
+      (take advance-ct rolls)))
+
+  (define (drop-rolls rolls)
+    (let ((drop-ct (if (is-strike? rolls) 1 2) ))
+      (drop drop-ct rolls)))
   
   (define (make-frames rolls)
-    (cond [(null? rolls)
-           null]
-          [(is-strike? (take 1 rolls))
-           (cons (take 3 rolls) (make-frames (rest rolls)))]
-          [(is-spare? (take 2 rolls))
-           (cons (take 3 rolls) (make-frames (rest (rest rolls))))]
-          [else (cons (take 2 rolls)
-                      (make-frames (rest (rest rolls))))]))
-  
+    (if (null? rolls)
+        null
+        (cons (advance-rolls rolls) (make-frames (drop-rolls rolls)))))
+    
   (define (score-game frames)
     (define (score-frame frame)
       (foldl + 0 frame))
